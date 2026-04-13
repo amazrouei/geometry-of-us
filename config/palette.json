@@ -1,0 +1,15 @@
+{
+  "colors": [
+    { "name": "Red", "rgb": [220, 60, 60] },
+    { "name": "Orange", "rgb": [235, 140, 60] },
+    { "name": "Yellow", "rgb": [235, 215, 70] },
+    { "name": "Green", "rgb": [80, 190, 110] },
+    { "name": "Cyan", "rgb": [70, 200, 210] },
+    { "name": "Blue", "rgb": [70, 120, 230] },
+    { "name": "Purple", "rgb": [150, 90, 210] },
+    { "name": "Pink", "rgb": [230, 120, 180] },
+    { "name": "White", "rgb": [245, 245, 245] },
+    
+    { "name": "Black", "rgb": [25, 25, 25] }
+  ]
+}

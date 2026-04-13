@@ -1,0 +1,17 @@
+{
+  "thresholds": {
+    "high": 75,
+    "mid": 55,
+    "low": 40
+  },
+  "contrast": {
+    "high": 0.55
+  },
+  "balance": {
+    "high": 70
+  },
+  "palette": {
+    "scatteredEffColors": 5,
+    "dominantMinShare": 0.45
+  }
+}

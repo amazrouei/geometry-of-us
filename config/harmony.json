@@ -1,0 +1,24 @@
+{
+  "weights": {
+    "symmetryBalance": 0.40,
+    "colorHarmony": 0.35,
+    "formalCohesion": 0.25
+  },
+  "symmetry": {
+    "useTopBottom": true,
+    "symmetryWeight": 0.60,
+    "balanceWeight": 0.40
+  },
+  "color": {
+    "analogousWindowDeg": 30,
+    "unknownPenalty": 0.15
+  },
+  "cohesion": {
+    "proximityTargetNorm": 0.25,
+    "areaCVMax": 1.0
+  },
+  "geometricalHarmony": {
+    "symmetryWeight": 0.60,
+    "shapeBalanceWeight": 0.40
+  }
+}

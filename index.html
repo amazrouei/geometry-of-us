@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Geometry of Us Interface</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ──────── Reset ──────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ──────── Body ──────── */
+      body {
+        background: #ffffff;
+        color: #1e293b;
+         font-family: "Inter", sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      /* ──────── Page header ──────── */
+      .page-header {
+        text-align: center;
+        padding: 14px 20px 8px;
+        width: 100%;
+        max-width: 1200px;
+        flex-shrink: 0;
+      }
+
+      .page-header h1 {
+  font-family: "Inter", sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: #1e293b;
+        letter-spacing: 0.3px;
+        line-height: 1.3;
+      }
+
+      .page-header h1 span {
+        color: #000000;
+      }
+
+      .page-header .subtitle {
+        font-size: 10px;
+color: #000000;
+        margin-top: 4px;
+        font-weight: 400;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      /* ──────── Canvas container ──────── */
+      #app {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 0 16px 0;
+        flex: 1;
+        min-height: 0;
+      }
+
+      canvas {
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06),
+          0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+
+      /* ──────── Fixed button bar ──────── */
+      #button-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(16px);
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.05);
+        z-index: 1000;
+      }
+
+      #button-bar.visible {
+        display: flex;
+      }
+
+      /* ──────── Buttons ──────── */
+      button {
+        font-family: "Inter", sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 8px 20px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        letter-spacing: 0.3px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+
+      button:hover {
+        background: #f1f5f9;
+        border-color: #000000;
+        color: #1e293b;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);     
+ }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      button.btn-primary {
+        background: #000000;
+        color: #ffffff;
+        border-color: #000000;
+      }
+
+      button.btn-primary:hover {
+        background: #000000;
+        border-color: #000000;
+        color: #ffffff;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);      }
+
+      /* ──────── Keyboard hints ──────── */
+      .keyboard-hints {
+        text-align: center;
+        padding: 4px 0 6px;
+        color: #000000;
+        font-size: 10px;
+        letter-spacing: 0.4px;
+        flex-shrink: 0;
+      }
+
+      .keyboard-hints kbd {
+        display: inline-block;
+        padding: 1px 6px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        font-family: "Inter", monospace;
+        font-size: 9px;
+        color: #64748b;
+        margin: 0 2px;
+      }
+
+      .keyboard-hints .sep {
+        color: #cbd5e1;
+        margin: 0 4px;
+      }
+
+      /* ──────── Footer ──────── */
+      .footer {
+        text-align: center;
+        padding: 4px 0 8px;
+        color: #cbd5e1;
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+      }
+
+      /* ══════════════════════════════════════════
+         Touch Experience Overlays
+         ══════════════════════════════════════════ */
+
+      /* ── Welcome Overlay ── */
+      #welcome-overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .welcome-content {
+        text-align: center;
+        padding: 32px;
+      }
+
+      .welcome-eyebrow {
+        font-size: 13px;
+        color: #94a3b8;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+      }
+
+      .welcome-title {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: clamp(32px, 5vw, 52px);
+        font-weight: 600;
+        color: #1e293b;
+        line-height: 1.3;
+        margin-bottom: 40px;
+      }
+
+      .welcome-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 18px 48px;
+        font-family: "Inter", sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 16px;
+        background: #000000;
+        color: #ffffff;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);     
+ }
+
+      .welcome-btn:hover,
+      .welcome-btn:active {
+        background: #000000;
+        transform: scale(1.03);
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);     
+ }
+
+      .welcome-btn-icon {
+        display: inline-block;
+        animation: pulse-icon 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse-icon {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50%      { transform: scale(1.15); opacity: 1; }
+      }
+
+      /* ── Print Bar (bottom, during ARRANGING) ── */
+      #print-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 24px;
+        padding: 16px 28px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.06);
+        z-index: 1500;
+      }
+
+      .print-hint {
+        font-size: 14px;
+        color: #000000;
+      }
+
+      .print-btn {
+        padding: 14px 44px;
+        font-family: "Inter", sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 14px;
+        background: #000000;
+        color: #ffffff;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);      
+}
+
+      .print-btn:hover,
+      .print-btn:active {
+        background: #000000;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);     
+ }
+
+      /* ── Processing Overlay ── */
+ #processing-overlay {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 3000;
+}
+     .processing-spinner {
+  width: 52px;
+  height: 52px;
+  border: 4px solid #e5e5e5;
+  border-top-color: #000000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+ .processing-text {
+  margin-top: 22px;
+  font-size: 16px;
+  color: #000000;
+}
+
+      /* ── Results Overlay ── */
+      #results-overlay {
+        position: fixed;
+        inset: 0;
+        background: #f8fafc;
+        display: none;
+        justify-content: center;
+        align-items: flex-start;
+        z-index: 3000;
+      }
+
+      .results-scroll-wrap {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 32px 24px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .results-content {
+        max-width: 1100px;
+        width: 100%;
+        text-align: center;
+      }
+
+      .results-title {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 28px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 24px;
+      }
+
+      .results-body {
+        display: flex;
+        gap: 28px;
+        align-items: flex-start;
+      }
+
+      .results-left {
+        flex: 1.3;
+        min-width: 0;
+      }
+
+      .results-left img {
+        width: 100%;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+      }
+
+      .results-right {
+        flex: 0.7;
+        text-align: left;
+        min-width: 260px;
+      }
+
+      .result-analysis-box {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 18px;
+        font-size: 13px;
+        line-height: 1.75;
+        color: #334155;
+        margin-bottom: 18px;
+      }
+
+      .results-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+
+      .res-btn {
+        flex: 1;
+        min-width: 100px;
+        padding: 12px 20px;
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .res-btn:hover { border-color: #000000; color: #1e293b; }
+
+      .res-btn-primary {
+        background: #000000;
+        color: #ffffff;
+        border-color: #000000;
+      }
+
+      .res-btn-primary:hover {
+        background: #000000;
+        border-color: #000000;
+      }
+
+      .results-qr-section {
+        text-align: center;
+        padding: 18px;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .qr-label {
+        font-size: 12px;
+        color: #000000;
+        margin-bottom: 12px;
+      }
+
+      /* ── Print-only container ── */
+      #print-content {
+        display: none;
+      }
+
+      @media print {
+        /* Hide everything except the print container */
+        body > *:not(#print-content) {
+          display: none !important;
+        }
+        #print-content {
+          display: block !important;
+          padding: 16px;
+        }
+      }
+
+      /* ══════════════════════════════════════════
+         Responsive — Tablet / iPad
+         ══════════════════════════════════════════ */
+      @media (max-width: 1024px) {
+        .page-header { padding: 10px 16px 6px; }
+        .page-header h1 { font-size: 17px; }
+        #app { padding: 0 8px; }
+        canvas { border-radius: 8px; }
+        .keyboard-hints { display: none; }
+
+        .results-body {
+          flex-direction: column;
+        }
+        .results-right {
+          min-width: 0;
+          width: 100%;
+        }
+        .results-scroll-wrap { padding: 20px 16px; }
+        .results-title { font-size: 24px; margin-bottom: 16px; }
+      }
+
+      /* ══════════════════════════════════════════
+         Responsive — Mobile phones
+         ══════════════════════════════════════════ */
+      @media (max-width: 600px) {
+        body { overflow-y: auto; height: auto; min-height: 100vh; }
+
+        .page-header { padding: 8px 12px 4px; }
+        .page-header h1 { font-size: 14px; }
+        .page-header .subtitle { font-size: 8px; letter-spacing: 1.5px; }
+
+        #app { padding: 0 4px; flex: unset; }
+        canvas { max-width: 100% !important; height: auto !important; border-radius: 6px; }
+
+        .keyboard-hints { display: none; }
+        .footer { font-size: 8px; padding: 2px 0 4px; }
+
+        /* Welcome */
+        .welcome-title { font-size: clamp(22px, 6vw, 36px) !important; }
+        .welcome-eyebrow { font-size: 11px; letter-spacing: 3px; }
+        .welcome-btn { padding: 14px 32px; font-size: 15px; border-radius: 12px; }
+
+        /* Print bar */
+        #print-bar { padding: 10px 14px; gap: 12px; flex-wrap: wrap; }
+        .print-hint { font-size: 12px; text-align: center; width: 100%; }
+        .print-btn { padding: 12px 32px; font-size: 15px; width: 100%; }
+
+        /* Results */
+        .results-scroll-wrap { padding: 16px 10px; }
+        .results-title { font-size: 20px; margin-bottom: 12px; }
+        .results-body { flex-direction: column; gap: 16px; }
+        .results-right { min-width: 0; width: 100%; }
+        .results-left img { border-radius: 8px; }
+        .result-analysis-box { padding: 14px; font-size: 12px; }
+        .results-actions { gap: 8px; }
+        .res-btn { padding: 10px 14px; font-size: 13px; min-width: 80px; }
+        .results-qr-section { padding: 14px; }
+
+        /* Button bar */
+        #button-bar { padding: 8px 12px; gap: 6px; }
+        #button-bar button { font-size: 11px; padding: 6px 14px; }
+      }
+
+      /* ══════════════════════════════════════════
+         Camera switch button (floating)
+         ══════════════════════════════════════════ */
+      #camera-switch-btn {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 2500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1px solid #e2e8f0;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        font-size: 20px;
+        line-height: 1;
+        transition: all 0.2s ease;
+        color: #334155;
+        padding: 0;
+      }
+      #camera-switch-btn:hover,
+      #camera-switch-btn:active {
+        background: #000000;
+        color: #fff;
+        border-color: #000000;
+        transform: scale(1.08);
+      }
+      #camera-switch-btn.visible { display: flex; }
+
+      /* Only show camera switch on devices likely to have two cameras */
+      @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
+        #camera-switch-btn { display: none !important; }
+      }
+      * {
+  font-family: "Inter", sans-serif !important;
+}
+    </style>
+  </head>
+
+  <body>
+    <!-- ── Page header ── -->
+    <header class="page-header">
+      <h1>
+        The Geometry of Us Inteface
+      </h1>
+    </header>
+
+    <!-- ── Camera switch (mobile / tablet) ── -->
+    <button id="camera-switch-btn" title="Switch Camera">&#x1F504;</button>
+
+    <!-- ── Canvas mount ── -->
+    <div id="app"></div>
+
+    <!-- ── Fixed button bar (shown in RESULT state) ── -->
+    <div id="button-bar"></div>
+
+    <!-- ── Footer ── -->
+    <div class="footer">
+The Geometry of Us CV Prototype © 2026
+    </div>
+
+    <!-- ── p5.js ── -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+    <!-- QR code generator (for phone download links) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+    <!-- ── Application modules (order matters) ── -->
+    <script src="./src/utils.js"></script>
+    <script src="./src/camera.js"></script>
+    <script src="./src/preprocess.js"></script>
+    <script src="./src/shapes.js"></script>
+    <script src="./src/colors.js"></script>
+    <script src="./src/stability.js"></script>
+    <script src="./src/shapeClassifier.js"></script>
+    <script src="./src/scoring.js"></script>
+    <script src="./src/geometricalHarmony.js"></script>
+    <script src="./src/diagnosis.js"></script>
+    <script src="./src/chromaticContext.js"></script>
+    <script src="./src/interpretation.js"></script>
+    <script src="./src/resultsView.js"></script>
+    <script src="./src/touchUI.js"></script>
+    <script src="./src/outputManager.js"></script>
+
+    <!-- ── Main sketch ── -->
+    <script src="./sketch.js"></script>
+
+    <!-- ── Hidden container used by @media print ── -->
+    <div id="print-content"></div>
+  </body>
+</html>
