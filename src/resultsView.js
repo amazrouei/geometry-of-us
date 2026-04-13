@@ -316,37 +316,46 @@ g.text(pct + "%", x + pad, y + 66);
     /* ═══════════════════════════════════════════════
        SECTION 3 — Structural Diagnosis
        ═══════════════════════════════════════════════ */
-    _drawDiagnosisPanel(g, x, y, w, h, diagnosis) {
-      this._card(g, x, y, w, h);
-      this._cardTitle(g, x, y, w, "Structural Diagnosis");
+_drawDiagnosisPanel(g, x, y, w, h, diagnosis) {
+  this._card(g, x, y, w, h);
+  this._cardTitle(g, x, y, w, "Structural Diagnosis");
 
-      var pad  = 16;
-      var text = String(diagnosis.text || "No diagnostic data available.");
+  var pad  = 16;
+  var text = String(diagnosis.text || "No diagnostic data available.");
 
-      // Meta tags
-      var symLvl  = diagnosis.symmetryLevel  || "\u2014";
-      var shapDom = diagnosis.shapeDominance || "\u2014";
+  var symLvl  = diagnosis.symmetryLevel  || "\u2014";
+  var shapDom = diagnosis.shapeDominance || "\u2014";
 
-      g.fill(C.textDim[0], C.textDim[1], C.textDim[2]);
-      g.textAlign(g.LEFT, g.CENTER);
-      g.textSize(9);
-      g.text("Symmetry: " + symLvl + "  \u00B7  Shape Profile: " + shapDom, x + pad, y + 38);
+  g.fill(0);
+  g.textAlign(g.LEFT, g.CENTER);
+  g.textSize(9);
+  g.text("Symmetry: " + symLvl + "  \u00B7  Shape Profile: " + shapDom, x + pad, y + 38);
 
-      // Paragraph wrapped
-      g.fill(C.textMuted[0], C.textMuted[1], C.textMuted[2]);
-      g.textAlign(g.LEFT, g.TOP);
-      g.textSize(10.5);
+  var maxW = w - pad * 2;
+  var startY = y + 52;
+  var maxH = h - 60;
 
-      var maxW = w - pad * 2;
-      var lines = this._wrapText(g, text, maxW);
-      var startY = y + 52;
-      var lineH  = 14;
-      var maxLines = Math.min(lines.length, 6);
+  var fontSize = 16;
+  var lineH;
+  var lines;
 
-      for (var i = 0; i < maxLines; i++) {
-        g.text(lines[i], x + pad, startY + i * lineH);
-      }
-    }
+  while (fontSize > 10) {
+    g.textSize(fontSize);
+    lineH = fontSize * 1.4;
+    lines = this._wrapText(g, text, maxW);
+
+    if (lines.length * lineH <= maxH) break;
+    fontSize -= 0.5;
+  }
+
+  g.fill(0);
+  g.textAlign(g.LEFT, g.TOP);
+  g.textSize(fontSize);
+
+  for (var i = 0; i < lines.length; i++) {
+    g.text(lines[i], x + pad, startY + i * lineH);
+  }
+}
 
     /* ═══════════════════════════════════════════════
        SECTION 4 — Chromatic Context (Non-scored)
