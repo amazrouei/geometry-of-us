@@ -137,7 +137,7 @@
         '<p class="welcome-eyebrow">The Geometry of Us</p>' +
         '<h1 class="welcome-title">What is your geometric<br>harmony to one another?</h1>' +
         '<button id="welcome-start-btn" class="welcome-btn">' +
-          '<span class="welcome-btn-icon">&#9654;</span> Tap the screen to start' +
+          '<span class="welcome-btn-icon">&#9654;</span> Start' +
         '</button>' +
       '</div>';
     document.body.appendChild(el);
