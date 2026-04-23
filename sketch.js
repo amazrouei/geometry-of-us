@@ -1,58 +1,45 @@
 (function () {
   "use strict";
 
-  /* ═══════════════════════════════════════════════════════
-     sketch.js  —  Main p5 entry point
-     Phase 2:  Geometrical Harmony pipeline
-     ═══════════════════════════════════════════════════════ */
-
-  // Core pipeline modules
+   
   let cam;
   let pre;
   let detector;
   let colorer;
   let stable;
-  let scorer;           // legacy scorer (used to extract symmetry score)
-  let interpreter;      // legacy interpretation (kept for compatibility)
+  let scorer;           
+  let interpreter;      
 
-  // Phase 2 modules
-  let shapeClassifier;
+   let shapeClassifier;
   let geoHarmonyScorer;
   let diagnosis;
   let chromaticCtx;
   let resultsView;
 
-  // Canvas reference
-  let canvasEl;
+   let canvasEl;
 
-  // UI buttons
-  let exportBtn     = null;
+   let exportBtn     = null;
   let exportJsonBtn = null;
   let newCaptureBtn = null;
 
-  // Touch experience modules
-  let touchUI       = null;
+   let touchUI       = null;
   let outputManager = null;
 
-  // Debug overlay toggle (D key)
-  let debugEnabled  = false;
+   let debugEnabled  = false;
   let lastLiveShapes = [];
 
-  // Cached results for the frozen snapshot
-  let harmonyResult        = null;   // from legacy scorer (needed for symmetry)
-  let shapeClassResult     = null;   // from ShapeClassifier
-  let geoHarmonyResult     = null;   // from GeometricalHarmonyScorer
-  let diagnosisResult      = null;   // from StructuralDiagnosis
-  let chromaticResult      = null;   // from ChromaticContext
-  let interpretResult      = null;   // from legacy InterpretiveTextGenerator
+   let harmonyResult        = null;   
+  let shapeClassResult     = null;    
+  let geoHarmonyResult     = null;    
+  let diagnosisResult      = null;    
+  let chromaticResult      = null;   
+  let interpretResult      = null;   
 
-  // Loaded configs
-  let PALETTE_CFG    = null;
+   let PALETTE_CFG    = null;
   let HARMONY_CFG    = null;
   let INTERPRET_CFG  = null;
 
-  /* ─── Light-theme colour constants (matching HTML + ResultsView) ─── */
-  const C = {
+   const C = {
     bg:          [255, 255, 255],
     cardBg:      [248, 250, 252],
     cardBorder:  [226, 232, 240],
@@ -64,25 +51,19 @@
     barBg:       [241, 245, 249],
   };
 
-  /* ═══════════════════════════════════════════════
-     preload()
-     ═══════════════════════════════════════════════ */
+   
   window.preload = function () {
     PALETTE_CFG   = loadJSON("./config/palette.json");
     HARMONY_CFG   = loadJSON("./config/harmony.json");
     INTERPRET_CFG = loadJSON("./config/interpretation.json");
   };
 
-  /* ═══════════════════════════════════════════════
-     setupApp()  — Initialise every pipeline module
-     ═══════════════════════════════════════════════ */
+  
   function setupApp() {
-    /* Camera */
-    cam = new window.App.CameraManager({ width: 640, height: 480, mirror: true });
+     cam = new window.App.CameraManager({ width: 640, height: 480, mirror: true });
     cam.init();
 
-    /* Preprocessor */
-    pre = new window.App.Preprocessor({
+     pre = new window.App.Preprocessor({
       inputW: 640,
       inputH: 480,
       downsample: 2,
@@ -94,8 +75,7 @@
     });
     pre.init();
 
-    /* Shape detector */
-    detector = new window.App.ShapeDetector({
+     detector = new window.App.ShapeDetector({
       w: pre.getWidth(),
       h: pre.getHeight(),
       minArea: 120,
@@ -105,16 +85,14 @@
       use8Connectivity: true,
     });
 
-    /* Colour analyser */
-    colorer = new window.App.ColorAnalyzer(PALETTE_CFG, {
+     colorer = new window.App.ColorAnalyzer(PALETTE_CFG, {
       maxSamples: 350,
       graySatThresh: 0.12,
       blackValThresh: 0.12,
       whiteValThresh: 0.92,
     });
 
-    /* Stability tracker */
-    stable = new window.App.StabilityTracker({
+     stable = new window.App.StabilityTracker({
       w: 640,
       h: 480,
       sampleStep: 6,
@@ -128,29 +106,22 @@
       warnFrames: 12,
     });
 
-    /* Legacy scorer — we still use it to get symmetryOnlyScore */
-    scorer = new window.App.HarmonyScorer(HARMONY_CFG, PALETTE_CFG);
+     scorer = new window.App.HarmonyScorer(HARMONY_CFG, PALETTE_CFG);
 
-    /* Legacy interpretation (kept for JSON export compatibility) */
-    interpreter = new window.App.InterpretiveTextGenerator(INTERPRET_CFG);
+     interpreter = new window.App.InterpretiveTextGenerator(INTERPRET_CFG);
 
-    /* ── Phase 2 modules ── */
-    shapeClassifier  = new window.App.ShapeClassifier({ dpEpsilonRatio: 0.04 });
+     shapeClassifier  = new window.App.ShapeClassifier({ dpEpsilonRatio: 0.04 });
     geoHarmonyScorer = new window.App.GeometricalHarmonyScorer(HARMONY_CFG);
     diagnosis        = new window.App.StructuralDiagnosis();
     chromaticCtx     = new window.App.ChromaticContext(PALETTE_CFG);
 
-    /* Results view (light-themed) */
-    resultsView = new window.App.ResultsView({ w: 1200, h: 720, paletteCfg: PALETTE_CFG });
+     resultsView = new window.App.ResultsView({ w: 1200, h: 720, paletteCfg: PALETTE_CFG });
 
-    /* Touch experience modules */
-    outputManager = new window.App.OutputManager();
+     outputManager = new window.App.OutputManager();
     touchUI       = new window.App.TouchUI();
   }
 
-  /* ═══════════════════════════════════════════════
-     resetToLive()
-     ═══════════════════════════════════════════════ */
+  
   function resetToLive() {
     stable.reset();
     harmonyResult    = null;
@@ -161,9 +132,7 @@
     interpretResult  = null;
   }
 
-  /* ═══════════════════════════════════════════════
-     Touch UI initialisation
-     ═══════════════════════════════════════════════ */
+  
   function initTouchUI() {
     if (!touchUI) return;
     touchUI.init({
@@ -176,40 +145,32 @@
     });
   }
 
-  /* ═══════════════════════════════════════════════
-     performCapture()  — Manual capture triggered by
-     the Touch UI "Print" button.  Runs the full CV
-     pipeline then hands off to output delivery.
-     ═══════════════════════════════════════════════ */
+  
   function performCapture() {
     if (!cam || !cam.ready) return;
 
-    /* Clear any prior results */
-    harmonyResult    = null;
+     harmonyResult    = null;
     shapeClassResult = null;
     geoHarmonyResult = null;
     diagnosisResult  = null;
     chromaticResult  = null;
     interpretResult  = null;
 
-    /* Fresh preprocessing + detection */
-    pre.update(cam.getFrame());
+     pre.update(cam.getFrame());
     var shapes = detector.detect(pre.getBinaryMask());
     colorer.update(
       cam.getFrame(), shapes, detector.getLabelMap(),
       pre.getWidth(), pre.getHeight()
     );
 
-    /* Force freeze the current frame */
-    stable.forceFreeze(cam.getFrame(), shapes, pre.getBinaryImage());
+     stable.forceFreeze(cam.getFrame(), shapes, pre.getBinaryImage());
 
     var snap          = stable.getSnapshotFrame();
     var snapBin       = stable.getSnapshotBinary();
     var frozenShapes  = stable.getSnapshotShapes();
     var frozenPalette = stable.getSnapshotPalette();
 
-    /* 1. Legacy scorer → symmetry */
-    harmonyResult = scorer.compute({
+     harmonyResult = scorer.compute({
       shapes:         frozenShapes,
       paletteDist:    frozenPalette,
       binarySnapshot: snapBin,
@@ -217,30 +178,25 @@
       hSmall:         pre.getHeight(),
     });
 
-    /* 2. Classify shapes */
-    shapeClassResult = shapeClassifier.classify(frozenShapes);
+     shapeClassResult = shapeClassifier.classify(frozenShapes);
 
-    /* 3. Geometrical Harmony */
-    var sym01 = (harmonyResult.symmetryOnlyScore || 0) / 100;
+     var sym01 = (harmonyResult.symmetryOnlyScore || 0) / 100;
     geoHarmonyResult = geoHarmonyScorer.compute(
       sym01,
       shapeClassResult.distribution,
       shapeClassResult.totalClassified
     );
 
-    /* 4. Structural Diagnosis */
-    diagnosisResult = diagnosis.generate({
+     diagnosisResult = diagnosis.generate({
       symmetryPercent: harmonyResult.symmetryOnlyScore,
       shapeData:       shapeClassResult,
       harmonyScore:    geoHarmonyResult.score,
       harmonyLabel:    geoHarmonyResult.label,
     });
 
-    /* 5. Chromatic Context */
-    chromaticResult = chromaticCtx.getContext(frozenPalette, frozenShapes);
+     chromaticResult = chromaticCtx.getContext(frozenPalette, frozenShapes);
 
-    /* 6. Legacy interpretation */
-    interpretResult = interpreter.generate({
+     interpretResult = interpreter.generate({
       scores:      harmonyResult,
       shapes:      frozenShapes,
       paletteDist: frozenPalette,
@@ -248,8 +204,7 @@
       hSmall:      pre.getHeight(),
     });
 
-    /* Render the offscreen results view */
-    var detectionData = {
+     var detectionData = {
       dominantShape:   shapeClassResult ? shapeClassResult.dominantShape  : "\u2014",
       symmetryPercent: harmonyResult    ? harmonyResult.symmetryOnlyScore : 0,
       dominantColor:   getDominantColorName(frozenPalette),
@@ -266,8 +221,7 @@
       timestampText:      formatTimestamp(Date.now()),
     });
 
-    /* Generate output image + analysis HTML */
-    var analysisData = {
+     var analysisData = {
       detection:          detectionData,
       geometricalHarmony: geoHarmonyResult || {},
       diagnosis:          diagnosisResult  || {},
@@ -276,8 +230,7 @@
 
     var output = outputManager.generate(resultsView.getGraphics(), analysisData);
 
-    /* Save to server for QR download, then reveal results */
-    outputManager.saveToServer(function (err, url) {
+     outputManager.saveToServer(function (err, url) {
       touchUI.showResults(
         output.imageDataUrl,
         output.analysisHTML,
@@ -286,9 +239,7 @@
     });
   }
 
-  /* ═══════════════════════════════════════════════
-     Buttons
-     ═══════════════════════════════════════════════ */
+   
   function makeButtons() {
     var bar = document.getElementById("button-bar");
 
@@ -326,9 +277,7 @@
     }
   }
 
-  /* ═══════════════════════════════════════════════
-     JSON Export
-     ═══════════════════════════════════════════════ */
+  
   function exportFrozenAnalysisJSON() {
     if (stable.getState() !== "RESULT") return;
 
@@ -363,9 +312,7 @@
     saveJSON(payload, "snapshot_analysis.json");
   }
 
-  /* ═══════════════════════════════════════════════
-     Canvas-level panel drawing (dark theme)
-     ═══════════════════════════════════════════════ */
+ 
 
 function drawPanel(x, y, w, h, title) {
   push();
@@ -391,9 +338,7 @@ function drawPanel(x, y, w, h, title) {
   pop();
 }
 
-  /* ═══════════════════════════════════════════════
-     Live Video Panel (left side)
-     ═══════════════════════════════════════════════ */
+  
   function drawLiveVideoPanel(layout) {
     var lx = layout.x, ly = layout.y, lw = layout.w, lh = layout.h;
 
@@ -414,8 +359,7 @@ function drawPanel(x, y, w, h, title) {
 
     cam.drawToCanvas(vx, vy, vw, vh);
 
-    // Debug overlay
-    if (debugEnabled && lastLiveShapes && lastLiveShapes.length) {
+     if (debugEnabled && lastLiveShapes && lastLiveShapes.length) {
       var sx = vw / pre.getWidth();
       var sy = vh / pre.getHeight();
 
@@ -438,17 +382,13 @@ function drawPanel(x, y, w, h, title) {
     }
   }
 
-  /* ═══════════════════════════════════════════════
-     Right panel — print view copy
-     ═══════════════════════════════════════════════ */
+ 
   function drawRightPanelFromPrintView(dst, src) {
     var g = resultsView.getGraphics();
     image(g, dst.x, dst.y, dst.w, dst.h, src.x, src.y, src.w, src.h);
   }
 
-  /* ═══════════════════════════════════════════════
-     Live right-side placeholder
-     ═══════════════════════════════════════════════ */
+  
 
   function drawLiveRightPlaceholder(layout) {
   drawPanel(layout.x, layout.y, layout.w, layout.h, "Analysis");
@@ -498,9 +438,7 @@ function drawPanel(x, y, w, h, title) {
   pop();
 }
 
-  /* ═══════════════════════════════════════════════
-     Timestamp formatter
-     ═══════════════════════════════════════════════ */
+ 
   function formatTimestamp(ms) {
     if (!ms) return "";
     var d = new Date(ms);
@@ -512,9 +450,8 @@ function drawPanel(x, y, w, h, title) {
     return yyyy + "-" + mm + "-" + dd + "  " + hh + ":" + mi;
   }
 
-  /* 
-     Dominant colour from palette distribution
-      */
+  
+      
   function getDominantColorName(paletteDist) {
     var colors = (paletteDist && paletteDist.colors) || [];
     for (var i = 0; i < colors.length; i++) {
@@ -526,9 +463,7 @@ function drawPanel(x, y, w, h, title) {
     return colors.length > 0 ? colors[0].name : "Unknown";
   }
 
-  /* ═══════════════════════════════════════════════
-     setup()
-     ═══════════════════════════════════════════════ */
+  
   window.setup = function () {
     var dims = getResponsiveCanvasSize();
     canvasEl = createCanvas(dims.cw, dims.ch);
@@ -539,20 +474,17 @@ function drawPanel(x, y, w, h, title) {
     initCameraSwitchButton();
   };
 
-  /* Responsive canvas helper */
+  
   function getResponsiveCanvasSize() {
     var maxW, maxH;
     if (windowWidth <= 600) {
-      /* Phone: full-width, 4:3 aspect */
-      maxW = windowWidth - 8;
+       maxW = windowWidth - 8;
       maxH = Math.min(windowHeight - 80, Math.floor(maxW * 0.75));
     } else if (windowWidth <= 1024) {
-      /* Tablet / iPad */
-      maxW = Math.min(windowWidth - 20, 900);
+       maxW = Math.min(windowWidth - 20, 900);
       maxH = Math.min(windowHeight - 90, Math.floor(maxW * 0.65));
     } else {
-      /* Desktop / laptop */
-      maxW = Math.min(windowWidth - 32, 1100);
+       maxW = Math.min(windowWidth - 32, 1100);
       maxH = Math.min(windowHeight - 110, Math.floor(maxW * 0.58));
     }
     return { cw: maxW, ch: maxH };
@@ -563,13 +495,11 @@ function drawPanel(x, y, w, h, title) {
     resizeCanvas(dims.cw, dims.ch);
   };
 
-  /* Camera switch button (front/back toggle) */
-  function initCameraSwitchButton() {
+   function initCameraSwitchButton() {
     var btn = document.getElementById("camera-switch-btn");
     if (!btn) return;
 
-    /* Show the button after cameras are enumerated (small delay for async init) */
-    var checkInterval = setInterval(function () {
+     var checkInterval = setInterval(function () {
       if (cam && cam.hasMultipleCameras()) {
         btn.classList.add("visible");
         btn.dataset.multiCam = "true";
@@ -577,29 +507,24 @@ function drawPanel(x, y, w, h, title) {
       }
     }, 500);
 
-    /* After 4s give up — device only has one camera */
-    setTimeout(function () { clearInterval(checkInterval); }, 4000);
+     setTimeout(function () { clearInterval(checkInterval); }, 4000);
 
     btn.addEventListener("click", function () {
       if (cam) {
         cam.switchCamera();
-        /* brief visual feedback */
-        btn.style.transform = "scale(0.9) rotate(180deg)";
+         btn.style.transform = "scale(0.9) rotate(180deg)";
         setTimeout(function () { btn.style.transform = ""; }, 300);
       }
     });
   }
 
-  /* ═══════════════════════════════════════════════
-     keyPressed()
-     ═══════════════════════════════════════════════ */
+  
   window.keyPressed = function () {
     if (key === "r" || key === "R") resetToLive();
 
     if (key === "f" || key === "F") {
       if (touchUI && touchUI.getState() === "ARRANGING") {
-        /* In touch mode, F triggers the same flow as the Print button */
-        performCapture();
+         performCapture();
       } else if (!touchUI) {
         harmonyResult    = null;
         shapeClassResult = null;
@@ -620,15 +545,12 @@ function drawPanel(x, y, w, h, title) {
     if (key === "d" || key === "D") debugEnabled = !debugEnabled;
   };
 
-  /* ═══════════════════════════════════════════════
-     draw()  — Main render loop
-     ═══════════════════════════════════════════════ */
+   
   window.draw = function () {
     updateButtonsPositionAndVisibility();
     cam.update();
 
-    // Dark background
-    background(C.bg[0], C.bg[1], C.bg[2]);
+     background(C.bg[0], C.bg[1], C.bg[2]);
 
     var margin = width <= 500 ? 6 : (width <= 800 ? 12 : 20);
     var topY   = width <= 500 ? 36 : 54;
@@ -637,14 +559,12 @@ function drawPanel(x, y, w, h, title) {
     var left, right;
 
     if (isNarrow) {
-      /* Stacked layout for mobile / portrait iPad */
-      var feedH = Math.floor((height - topY - 16) * 0.55);
+       var feedH = Math.floor((height - topY - 16) * 0.55);
       var gap   = 8;
       left  = { x: margin, y: topY, w: width - margin * 2, h: feedH };
       right = { x: margin, y: topY + feedH + gap, w: width - margin * 2, h: height - topY - feedH - gap - 8 };
     } else {
-      /* Side-by-side for larger screens */
-      var leftW  = Math.floor(width * 0.52);
+       var leftW  = Math.floor(width * 0.52);
       var gap    = 14;
       left  = { x: margin, y: topY, w: leftW, h: height - topY - 16 };
       right = {
@@ -655,8 +575,7 @@ function drawPanel(x, y, w, h, title) {
       };
     }
 
-    /* ── Camera ready? ── */
-    if (cam.ready) {
+     if (cam.ready) {
       drawLiveVideoPanel(left);
     } else {
       drawPanel(left.x, left.y, left.w, left.h, "Live Feed");
@@ -668,28 +587,24 @@ function drawPanel(x, y, w, h, title) {
 
     var state = stable.getState();
 
-    /* ── Live pipeline ── */
-    if (cam.ready && state !== "RESULT") {
+     if (cam.ready && state !== "RESULT") {
       pre.update(cam.getFrame());
       var shapes = detector.detect(pre.getBinaryMask());
       colorer.update(cam.getFrame(), shapes, detector.getLabelMap(), pre.getWidth(), pre.getHeight());
       lastLiveShapes = shapes;
-      /* In touch mode: skip auto-stability — capture is manual via Print */
-      if (!touchUI) {
+       if (!touchUI) {
         stable.update(cam.getFrame(), cam.getPrevFrame(), shapes, pre.getBinaryImage());
       }
     }
 
-    /* ── RESULT state: compute once, render always ── */
-    if (state === "RESULT") {
+     if (state === "RESULT") {
       var snap          = stable.getSnapshotFrame();
       var snapBin       = stable.getSnapshotBinary();
       var frozenShapes  = stable.getSnapshotShapes();
       var frozenPalette = stable.getSnapshotPalette();
 
       if (!harmonyResult && stable.consumeFrozenEvent()) {
-        /* 1. Legacy scorer → symmetry score */
-        harmonyResult = scorer.compute({
+         harmonyResult = scorer.compute({
           shapes: frozenShapes,
           paletteDist: frozenPalette,
           binarySnapshot: snapBin,
@@ -697,30 +612,25 @@ function drawPanel(x, y, w, h, title) {
           hSmall: pre.getHeight(),
         });
 
-        /* 2. Classify shapes (Triangle / Square / Hexagon) */
-        shapeClassResult = shapeClassifier.classify(frozenShapes);
+         shapeClassResult = shapeClassifier.classify(frozenShapes);
 
-        /* 3. Geometrical Harmony = 0.6 × Symmetry + 0.4 × ShapeBalance */
-        var symmetry01 = (harmonyResult.symmetryOnlyScore || 0) / 100;
+         var symmetry01 = (harmonyResult.symmetryOnlyScore || 0) / 100;
         geoHarmonyResult = geoHarmonyScorer.compute(
           symmetry01,
           shapeClassResult.distribution,
           shapeClassResult.totalClassified
         );
 
-        /* 4. Structural Diagnosis (poetic-academic) */
-        diagnosisResult = diagnosis.generate({
+         diagnosisResult = diagnosis.generate({
           symmetryPercent: harmonyResult.symmetryOnlyScore,
           shapeData:       shapeClassResult,
           harmonyScore:    geoHarmonyResult.score,
           harmonyLabel:    geoHarmonyResult.label,
         });
 
-        /* 5. Chromatic Context (non-scored) */
-        chromaticResult = chromaticCtx.getContext(frozenPalette, frozenShapes);
+         chromaticResult = chromaticCtx.getContext(frozenPalette, frozenShapes);
 
-        /* 6. Legacy interpretation (for backward-compat exports) */
-        interpretResult = interpreter.generate({
+         interpretResult = interpreter.generate({
           scores:     harmonyResult,
           shapes:     frozenShapes,
           paletteDist: frozenPalette,
@@ -729,8 +639,7 @@ function drawPanel(x, y, w, h, title) {
         });
       }
 
-      /* ── Render results view ── */
-      resultsView.render({
+       resultsView.render({
         snapshotFrame:      snap,
         detection: {
           dominantShape:    shapeClassResult  ? shapeClassResult.dominantShape  : "—",
@@ -754,8 +663,7 @@ function drawPanel(x, y, w, h, title) {
       drawLiveRightPlaceholder(right);
     }
 
-/* ── Title bar ── */
-noStroke();
+ noStroke();
 fill(0);
 textAlign(LEFT, CENTER);
 
